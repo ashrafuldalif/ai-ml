@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% block content %}
+<!-- Mood Popup Modal -->
+<div class="modal fade" id="moodModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content mood-modal">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">How are you feeling right now? 🎧</h5>
+      </div>
+      <div class="modal-body text-center">
+        <p class="text-muted">Select your mood so AI can suggest the perfect music!</p>
+        <div class="emoji-grid">
+          <button class="emoji-btn" data-mood="happy" onclick="selectMood('happy', this)">😄 Happy</button>
+          <button class="emoji-btn" data-mood="sad" onclick="selectMood('sad', this)">😢 Sad</button>
+          <button class="emoji-btn" data-mood="energetic" onclick="selectMood('energetic', this)">⚡ Energetic</button>
+          <button class="emoji-btn" data-mood="calm" onclick="selectMood('calm', this)">😌 Calm</button>
+          <button class="emoji-btn" data-mood="romantic" onclick="selectMood('romantic', this)">❤️ Romantic</button>
+          <button class="emoji-btn" data-mood="angry" onclick="selectMood('angry', this)">😠 Angry</button>
+          <button class="emoji-btn" data-mood="neutral" onclick="selectMood('neutral', this)">😐 Neutral</button>
+          <button class="emoji-btn" data-mood="focused" onclick="selectMood('focused', this)">🎯 Focused</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Song List -->
+  <div class="col-md-4">
+    <div class="card sidebar-card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>🎵 All Songs</span>
+        <input type="text" id="songSearch" class="form-control form-control-sm w-50" placeholder="Search..." />
+      </div>
+      <div class="card-body p-0 song-list-scroll">
+        <ul class="list-group list-group-flush" id="songList">
+          {% for song in songs %}
+          <li class="list-group-item song-item" data-id="{{ song.id }}" data-title="{{ song.title }}"
+            data-artist="{{ song.artist }}" data-file="{{ url_for('static', filename='music/' + song.filename) }}"
+            data-genre="{{ song.genre.name if song.genre else 'Unknown' }}" onclick="loadSong({{ song.id }}, '{{ song.title }}', '{{ song.artist }}',
+                              '{{ url_for('static', filename='music/' + song.filename) }}',
+                              '{{ song.genre.name if song.genre else 'Unknown' }}')">
+            <div class="d-flex align-items-center">
+              <div class="song-icon me-3">🎵</div>
+              <div>
+                <div class="fw-bold">{{ song.title }}</div>
+                <small class="text-muted">{{ song.artist }} · {{ song.genre.name if song.genre else 'Unknown' }}</small>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Filter by Genre -->
+    <div class="card mt-3 sidebar-card">
+      <div class="card-body">
+        <h6>Filter by Genre</h6>
+        <div class="genre-chips">
+          <span class="genre-chip active" onclick="filterGenre('all')">All</span>
+          {% for genre in genres %}
+          <span class="genre-chip" onclick="filterGenre('{{ genre.name }}')">{{ genre.name }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Player -->
+  <div class="col-md-5">
+    <div class="card player-card text-center">
+      <div class="card-body py-5">
+        <div class="album-art" id="albumArt">🎵</div>
+        <h4 id="songTitle" class="mt-3">No Song Selected</h4>
+        <p id="songArtist" class="text-muted">-</p>
+        <p id="songGenre"><span class="badge bg-secondary" id="genreBadge">-</span></p>
+
+        <div class="progress my-3" style="height:6px; cursor:pointer;" id="progressBar" onclick="seekAudio(event)">
+          <div class="progress-bar bg-primary" id="progress" style="width:0%"></div>
+        </div>
+        <div class="d-flex justify-content-between small text-muted px-1">
+          <span id="currentTime">0:00</span>
+          <span id="totalTime">0:00</span>
+        </div>
+
+        <div class="player-controls mt-3">
+          <button class="btn btn-outline-secondary btn-sm me-2" onclick="prevSong()"><i
+              class="fas fa-backward"></i></button>
+          <button class="btn btn-primary btn-lg" id="playPauseBtn" onclick="togglePlay()"><i
+              class="fas fa-play"></i></button>
+          <button class="btn btn-outline-secondary btn-sm ms-2" onclick="nextSong()"><i
+              class="fas fa-forward"></i></button>
+        </div>
+
+        <div class="feedback-btns mt-3">
+          <button class="btn btn-outline-success" id="likeBtn" onclick="sendFeedback(1)"><i
+              class="fas fa-thumbs-up"></i> Like</button>
+          <button class="btn btn-outline-danger ms-2" id="dislikeBtn" onclick="sendFeedback(-1)"><i
+              class="fas fa-thumbs-down"></i> Dislike</button>
+        </div>
+
+        <div class="volume-control mt-3">
+          <i class="fas fa-volume-up me-2"></i>
+          <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.8"
+            oninput="setVolume(this.value)" />
+        </div>
+
+        <div class="current-mood mt-2">
+          Mood: <span id="currentMoodBadge" class="badge bg-info">neutral</span>
+          <button class="btn btn-sm btn-outline-info ms-2" onclick="openMoodModal()">Change 😊</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Suggestions -->
+  <div class="col-md-3">
+    <div class="card suggestions-card">
+      <div class="card-header">
+        🤖 AI Suggestions
+        <small class="text-muted d-block" id="aiStrategy"></small>
+      </div>
+      <div class="card-body p-0" id="suggestionsList">
+        <div class="text-center text-muted p-4">Play a song to get AI suggestions!</div>
+      </div>
+    </div>
+
+    <div class="card mt-3 sidebar-card">
+      <div class="card-header">🕒 Recently Played</div>
+      <div class="card-body p-0" id="recentlyPlayed">
+        <div class="text-center text-muted p-3">Nothing yet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<audio id="audioPlayer" preload="metadata"></audio>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Show mood modal on first play only
+  let moodModalShown = false;
+  let currentMood = 'neutral';
+  let currentLogId = null;
+  let sessionStart = null;
+  let currentSongId = null;
+  let currentSongIndex = -1;
+  let songQueue = [];
+  let recentlyPlayed = [];
+  const moodModal = new bootstrap.Modal(document.getElementById('moodModal'), { keyboard: false });
+
+  function selectMood(mood, el) {
+    currentMood = mood;
+    document.getElementById('currentMoodBadge').textContent = mood;
+    document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    setTimeout(() => moodModal.hide(), 300);
+    if (currentSongId) playSongApi(currentSongId);
+  }
+
+  function openMoodModal() {
+    moodModal.show();
+  }
+
+  function loadSong(id, title, artist, file, genre) {
+    currentSongId = id;
+    document.getElementById('songTitle').textContent = title;
+    document.getElementById('songArtist').textContent = artist;
+    document.getElementById('genreBadge').textContent = genre;
+    document.getElementById('albumArt').textContent = '🎵';
+
+    const audio = document.getElementById('audioPlayer');
+    audio.src = file;
+    audio.play();
+    document.getElementById('playPauseBtn').innerHTML = '<i class="fas fa-pause"></i>';
+    sessionStart = Date.now();
+
+    if (!moodModalShown) {
+      moodModalShown = true;
+      moodModal.show();
+    } else {
+      playSongApi(id);
+    }
+
+    addToRecent(id, title, artist, file, genre);
+
+    // Highlight active song
+    document.querySelectorAll('.song-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.id == id);
+    });
+  }
+
+  function playSongApi(songId) {
+    fetch(`/user/play/${songId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mood: currentMood })
+    }).then(r => r.json()).then(data => {
+      currentLogId = data.log_id;
+      document.getElementById('aiStrategy').textContent = '🎯 Strategy: ' + data.action.replace(/_/g, ' ');
+      renderSuggestions(data.suggestions);
+    });
+  }
+
+  function renderSuggestions(suggestions) {
+    const el = document.getElementById('suggestionsList');
+    if (!suggestions.length) {
+      el.innerHTML = '<div class="text-center p-3">No suggestions yet</div>'; return;
+    }
+    el.innerHTML = suggestions.map(s => `
+      <div class="suggestion-item" onclick="loadSong(${s.id},'${s.title.replace(/'/g, "\\'")}','${s.artist.replace(/'/g, "\\'")}','/static/music/${s.filename}','${s.genre}')">
+        <div class="fw-bold">${s.title}</div>
+        <small class="text-muted">${s.artist} · ${s.genre}</small>
+      </div>`).join('');
+  }
+
+  function sendFeedback(liked) {
+    if (!currentLogId) return;
+    const duration = sessionStart ? (Date.now() - sessionStart) / 1000 : 0;
+    const audio = document.getElementById('audioPlayer');
+    const completed = audio.currentTime >= audio.duration * 0.8;
+    fetch('/user/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ log_id: currentLogId, liked, completed, session_duration: duration })
+    }).then(r => r.json()).then(data => {
+      const btn = liked === 1 ? document.getElementById('likeBtn') : document.getElementById('dislikeBtn');
+      btn.classList.add('active');
+    });
+  }
+
+  function togglePlay() {
+    const audio = document.getElementById('audioPlayer');
+    if (audio.paused) {
+      audio.play();
+      document.getElementById('playPauseBtn').innerHTML = '<i class="fas fa-pause"></i>';
+    } else {
+      audio.pause();
+      document.getElementById('playPauseBtn').innerHTML = '<i class="fas fa-play"></i>';
+    }
+  }
+
+  function setVolume(v) {
+    document.getElementById('audioPlayer').volume = v;
+  }
+
+  function seekAudio(e) {
+    const audio = document.getElementById('audioPlayer');
+    const bar = document.getElementById('progressBar');
+    const pct = e.offsetX / bar.offsetWidth;
+    audio.currentTime = pct * audio.duration;
+  }
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  }
+
+  document.getElementById('audioPlayer').addEventListener('timeupdate', function () {
+    const pct = this.duration ? (this.currentTime / this.duration) * 100 : 0;
+    document.getElementById('progress').style.width = pct + '%';
+    document.getElementById('currentTime').textContent = formatTime(this.currentTime);
+    document.getElementById('totalTime').textContent = formatTime(this.duration || 0);
+  });
+
+  document.getElementById('audioPlayer').addEventListener('ended', function () {
+    sendFeedback(0);
+    nextSong();
+  });
+
+  function nextSong() {
+    const items = document.querySelectorAll('.song-item');
+    let currentIdx = -1;
+    items.forEach((el, i) => { if (el.classList.contains('active')) currentIdx = i; });
+    const next = items[(currentIdx + 1) % items.length];
+    if (next) next.click();
+  }
+
+  function prevSong() {
+    const items = document.querySelectorAll('.song-item');
+    let currentIdx = 0;
+    items.forEach((el, i) => { if (el.classList.contains('active')) currentIdx = i; });
+    const prev = items[(currentIdx - 1 + items.length) % items.length];
+    if (prev) prev.click();
+  }
+
+  function addToRecent(id, title, artist, file, genre) {
+    const el = document.getElementById('recentlyPlayed');
+    // Remove duplicate if same song already in list
+    document.querySelectorAll('.recent-item').forEach(item => {
+      if (item.dataset.id == id) item.remove();
+    });
+    const div = document.createElement('div');
+    div.className = 'suggestion-item recent-item';
+    div.dataset.id = id;
+    div.innerHTML = `<div class="fw-bold">${title}</div><small class="text-muted">${artist} · ${genre}</small>`;
+    div.onclick = () => loadSong(id, title, artist, file, genre);
+    el.prepend(div);
+    // Remove the "Nothing yet" placeholder if present
+    const placeholder = el.querySelector('.text-muted.p-3');
+    if (placeholder) placeholder.remove();
+    // Keep only last 10
+    const items = el.querySelectorAll('.recent-item');
+    if (items.length > 10) items[items.length - 1].remove();
+  }
+
+  // Load persisted recently played history from DB on page load
+  function loadRecentHistory() {
+    fetch('/user/recent')
+      .then(r => r.json())
+      .then(songs => {
+        if (!songs.length) return;
+        const el = document.getElementById('recentlyPlayed');
+        el.innerHTML = '';
+        // Render oldest→newest so prepend gives newest-first order
+        songs.slice().reverse().forEach(s => {
+          const file = `/static/music/${s.filename}`;
+          const div = document.createElement('div');
+          div.className = 'suggestion-item recent-item';
+          div.dataset.id = s.id;
+          div.innerHTML = `<div class="fw-bold">${s.title}</div><small class="text-muted">${s.artist} · ${s.genre}</small>`;
+          div.onclick = () => loadSong(s.id, s.title, s.artist, file, s.genre);
+          el.prepend(div);
+        });
+      });
+  }
+
+  loadRecentHistory();
+
+  document.getElementById('songSearch').addEventListener('input', function () {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.song-item').forEach(el => {
+      el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+
+  // Genre filter
+  function filterGenre(genre) {
+    document.querySelectorAll('.genre-chip').forEach(c => c.classList.remove('active'));
+    event.target.classList.add('active');
+    document.querySelectorAll('.song-item').forEach(el => {
+      el.style.display = (genre === 'all' || el.dataset.genre === genre) ? '' : 'none';
+    });
+  }
+</script>
+{% endblock %}

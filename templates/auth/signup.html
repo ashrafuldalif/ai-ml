@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-4">
+    <div class="card shadow-lg auth-card">
+      <div class="card-body p-4">
+        <h3 class="text-center mb-4">🎶 Sign Up</h3>
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Gender</label>
+            <select name="gender" class="form-select" required>
+              <option value="" disabled selected>Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Age</label>
+            <input type="number" name="age" class="form-control" min="1" max="120" required />
+          </div>
+          <button type="submit" class="btn btn-success w-100">Create Account</button>
+        </form>
+        <p class="text-center mt-3">Have an account? <a href="/login">Login</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

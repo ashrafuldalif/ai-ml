@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block content %}
+<h5>🤖 RL Model — {{ user.username }}</h5>
+<div class="row mb-4">
+  <div class="col-md-3"><div class="card stat-card p-3 text-center"><h3>{{ stats.interactions }}</h3><p>Interactions</p></div></div>
+  <div class="col-md-3"><div class="card stat-card p-3 text-center"><h3>{{ stats.total_states }}</h3><p>States Learned</p></div></div>
+  <div class="col-md-3"><div class="card stat-card p-3 text-center"><h3>{{ stats.epsilon }}</h3><p>Exploration Rate (ε)</p></div></div>
+  <div class="col-md-3"><div class="card stat-card p-3 text-center"><h3>{{ stats.avg_q_value }}</h3><p>Avg Q-Value</p></div></div>
+</div>
+
+<div class="row">
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6>🎭 Mood Distribution</h6>
+      <canvas id="moodChart" height="200"></canvas>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6>🎸 Genre Preferences</h6>
+      <canvas id="genreChart" height="200"></canvas>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6>🕐 Listening Hours</h6>
+      <canvas id="hourChart" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3 p-3">
+  <h6>📋 Best Action Distribution (Q-table)</h6>
+  {% for action, count in stats.best_actions_distribution.items() %}
+  <div class="d-flex align-items-center mb-2">
+    <span class="me-3 text-info" style="width:160px;">{{ action.replace('_',' ') }}</span>
+    <div class="progress flex-grow-1" style="height:16px;">
+      <div class="progress-bar" style="width:{{ (count / stats.total_states * 100) if stats.total_states else 0 }}%"></div>
+    </div>
+    <span class="ms-2">{{ count }}</span>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card mt-3 p-3">
+  <h6>📜 Recent Listen Logs</h6>
+  <div class="table-responsive" style="max-height:300px;overflow-y:auto;">
+    <table class="table table-sm">
+      <thead><tr><th>Song</th><th>Mood</th><th>Hour</th><th>Humidity</th><th>Liked</th><th>Duration</th><th>Time</th></tr></thead>
+      <tbody>
+      {% for log in logs %}
+      <tr>
+        <td>{{ log.song.title }}</td>
+        <td>{{ log.mood }}</td>
+        <td>{{ log.hour_of_day }}:00</td>
+        <td>{{ log.weather_humidity }}%</td>
+        <td>{% if log.liked==1 %}👍{% elif log.liked==-1 %}👎{% else %}—{% endif %}</td>
+        <td>{{ "%.0f"|format(log.session_duration) }}s</td>
+        <td>{{ log.timestamp.strftime('%m/%d %H:%M') }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const moodData = {{ mood_counts | tojson }};
+const genreData = {{ genre_counts | tojson }};
+const hourData = {{ hour_counts | tojson }};
+
+new Chart(document.getElementById('moodChart'), {
+  type:'pie', data:{
+    labels: moodData.map(m=>m[0]),
+    datasets:[{data:moodData.map(m=>m[1]),
+      backgroundColor:['#6366f1','#f59e0b','#10b981','#ef4444','#3b82f6','#8b5cf6','#ec4899']}]
+  }
+});
+new Chart(document.getElementById('genreChart'), {
+  type:'bar', data:{
+    labels: genreData.map(g=>g[0]),
+    datasets:[{data:genreData.map(g=>g[1]), backgroundColor:'#6366f1', label:'Plays'}]
+  }, options:{plugins:{legend:{display:false}}}
+});
+new Chart(document.getElementById('hourChart'), {
+  type:'line', data:{
+    labels: hourData.map(h=>h[0]+':00'),
+    datasets:[{data:hourData.map(h=>h[1]), borderColor:'#10b981', fill:true,
+               backgroundColor:'rgba(16,185,129,0.1)', label:'Plays'}]
+  }
+});
+</script>
+{% endblock %}

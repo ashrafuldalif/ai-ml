@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6>➕ Add Genre</h6>
+      <form method="POST" action="/admin/genres/add">
+        <div class="mb-2"><input type="text" name="name" class="form-control" placeholder="Genre Name" required/></div>
+        <button type="submit" class="btn btn-primary w-100">Add Genre</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card p-3">
+      <h6>🎼 All Genres</h6>
+      <table class="table">
+        <thead><tr><th>Name</th><th>Songs</th><th>Action</th></tr></thead>
+        <tbody>
+        {% for genre in genres %}
+        <tr>
+          <td>{{ genre.name }}</td>
+          <td>{{ genre.songs|length }}</td>
+          <td>
+            <form method="POST" action="/admin/genres/delete/{{ genre.id }}" class="d-inline">
+              <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete?')">🗑️</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

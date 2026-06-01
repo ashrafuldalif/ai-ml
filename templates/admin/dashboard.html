@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<h4 class="mb-4">📊 Admin Dashboard</h4>
+<div class="row mb-4">
+  <div class="col-md-3"><div class="card stat-card text-center p-3"><h2>{{ total_users }}</h2><p>Users</p></div></div>
+  <div class="col-md-3"><div class="card stat-card text-center p-3"><h2>{{ total_songs }}</h2><p>Songs</p></div></div>
+  <div class="col-md-3"><div class="card stat-card text-center p-3"><h2>{{ total_plays }}</h2><p>Total Plays</p></div></div>
+  <div class="col-md-3"><div class="card stat-card text-center p-3"><h2>{{ total_logs }}</h2><p>Listen Logs</p></div></div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card p-3">
+      <h6>Genre Popularity</h6>
+      <canvas id="genreChart" height="200"></canvas>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card p-3">
+      <h6>Recent Activity</h6>
+      <div class="table-responsive" style="max-height:300px; overflow-y:auto;">
+        <table class="table table-sm">
+          <thead><tr><th>User</th><th>Song</th><th>Mood</th><th>Liked</th><th>Time</th></tr></thead>
+          <tbody>
+          {% for log in recent_logs %}
+          <tr>
+            <td>{{ log.user.username }}</td>
+            <td>{{ log.song.title }}</td>
+            <td>{{ log.mood }}</td>
+            <td>{% if log.liked == 1 %}👍{% elif log.liked == -1 %}👎{% else %}—{% endif %}</td>
+            <td>{{ log.timestamp.strftime('%H:%M') }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+fetch('/admin/api/stats').then(r=>r.json()).then(data=>{
+  new Chart(document.getElementById('genreChart'), {
+    type: 'doughnut',
+    data: {
+      labels: data.genres.map(g=>g.name),
+      datasets: [{data: data.genres.map(g=>g.count),
+        backgroundColor: ['#6366f1','#f59e0b','#10b981','#ef4444','#3b82f6','#8b5cf6','#ec4899']}]
+    }
+  });
+});
+</script>
+{% endblock %}

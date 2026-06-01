@@ -1,0 +1,55 @@
+:root {
+  --primary: #6366f1;
+  --dark: #0f172a;
+  --card-bg: #1e293b;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --border: #334155;
+}
+
+body { background: var(--dark); color: var(--text); font-family: 'Segoe UI', sans-serif; }
+.navbar { background: linear-gradient(135deg, #1e1b4b, #312e81) !important; border-bottom: 1px solid var(--border); }
+.card { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); border-radius: 12px; }
+.auth-card { max-width: 400px; margin: auto; }
+
+/* Player */
+.player-card { background: linear-gradient(135deg, #1e1b4b, #1e293b); border-radius: 20px; }
+.album-art { font-size: 100px; background: #2d3748; border-radius: 50%; width: 160px; height: 160px;
+             display: flex; align-items: center; justify-content: center; margin: auto; }
+.player-controls .btn-primary { border-radius: 50%; width: 60px; height: 60px; font-size: 1.2rem; }
+.volume-control { display: flex; align-items: center; justify-content: center; }
+#volumeSlider { width: 120px; accent-color: var(--primary); }
+
+/* Song List */
+.sidebar-card { border-radius: 12px; }
+.song-list-scroll { max-height: 450px; overflow-y: auto; }
+.song-item { background: var(--card-bg); color: var(--text); border-color: var(--border) !important;
+             cursor: pointer; transition: all 0.2s; }
+.song-item:hover, .song-item.active { background: #312e81 !important; border-left: 3px solid var(--primary); }
+.song-icon { font-size: 1.5rem; }
+
+/* Genre Chips */
+.genre-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.genre-chip { background: #2d3748; color: var(--text); padding: 4px 12px; border-radius: 20px;
+              cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+.genre-chip:hover, .genre-chip.active { background: var(--primary); color: white; }
+
+/* Suggestions */
+.suggestions-card { border-radius: 12px; }
+.suggestion-item { padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+.suggestion-item:hover { background: #312e81; }
+
+/* Mood Modal */
+.mood-modal { background: #1e293b; border: 1px solid var(--primary); border-radius: 16px; }
+.emoji-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.emoji-btn { background: #2d3748; color: var(--text); border: 2px solid transparent;
+             padding: 14px 8px; border-radius: 12px; cursor: pointer; font-size: 0.9rem;
+             transition: all 0.2s; }
+.emoji-btn:hover, .emoji-btn.active { background: var(--primary); border-color: #818cf8; transform: scale(1.05); }
+
+/* Admin Stats */
+.stat-card { background: linear-gradient(135deg, #1e1b4b, #312e81); border-radius: 12px; border: none; }
+.stat-card h2, .stat-card h3 { color: #a5b4fc; font-size: 2rem; font-weight: 700; }
+.feedback-btns .btn.active { opacity: 1; transform: scale(1.1); }
+.song-cover-placeholder { font-size: 3rem; background: #2d3748; border-radius: 12px; padding: 20px; }
+.progress { background: #2d3748; }

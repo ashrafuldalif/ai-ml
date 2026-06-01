@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6>➕ Add New Song</h6>
+      <form method="POST" action="/admin/songs/add" enctype="multipart/form-data">
+        <div class="mb-2"><input type="text" name="title" class="form-control" placeholder="Song Title" required/></div>
+        <div class="mb-2"><input type="text" name="artist" class="form-control" placeholder="Artist" required/></div>
+        <div class="mb-2">
+          <select name="genre_id" class="form-select">
+            <option value="">-- Genre --</option>
+            {% for genre in genres %}<option value="{{ genre.id }}">{{ genre.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="mb-2"><label>Audio File (mp3/wav)</label><input type="file" name="audio_file" class="form-control" accept=".mp3,.wav,.ogg,.flac" required/></div>
+        <div class="mb-2"><label>Cover Image (optional)</label><input type="file" name="cover_image" class="form-control" accept="image/*"/></div>
+        <button type="submit" class="btn btn-primary w-100">Upload Song</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card p-3">
+      <h6>🎵 All Songs ({{ songs|length }})</h6>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead><tr><th>#</th><th>Title</th><th>Artist</th><th>Genre</th><th>Plays</th><th>Action</th></tr></thead>
+          <tbody>
+          {% for song in songs %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ song.title }}</td>
+            <td>{{ song.artist }}</td>
+            <td>{{ song.genre.name if song.genre else '—' }}</td>
+            <td>{{ song.play_count }}</td>
+            <td>
+              <form method="POST" action="/admin/songs/delete/{{ song.id }}" class="d-inline">
+                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete?')">🗑️</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
